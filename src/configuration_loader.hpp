@@ -1,3 +1,4 @@
+#include <array>
 #include <fstream>
 #include <iostream>
 #include <limits>
@@ -96,30 +97,58 @@ public:
             return std::nullopt;
         }
 
-        std::string const data = *value + ",";
-
+        std::string const& data = *value;
         std::vector<TType> result;
-
-        auto const tryExtractValue = [this, &data](size_t start, size_t end) -> std::optional<TType> {
-            std::string const part = data.substr(start, end - start);
-            return tryParse<TType>(part);
-        };
-
         size_t start = 0;
-        size_t next_coma = data.find(',');
-        while (next_coma != std::string::npos) {
-            auto const val = tryExtractValue(start, next_coma);
-            if (val) {
-                result.push_back(*val);
-            } else {
-                return std::nullopt;
-            }
-
-            start = next_coma + 1;
-            next_coma = data.find(',', start);
+        while (auto const val = getNext<TType>(data, &start)) {
+            result.push_back(*val);
         }
 
         return result;
+    }
+
+    template<typename TType, size_t COUNT>
+    [[nodiscard]]
+    std::optional<std::array<TType, COUNT>> getValueAsArray(std::string const& key) const
+    {
+        std::optional<std::string> const value = getValueAsString(key);
+        if (!value) {
+            return std::nullopt;
+        }
+
+        std::string const& data = *value;
+        std::array<TType, COUNT> result;
+        size_t start = 0;
+        for (size_t i{0}; i < COUNT; ++i) {
+            auto const val = getNext<TType>(data, &start);
+            if (val) {
+                result[i] = *val;
+            } else {
+                return std::nullopt;
+            }
+        }
+
+        return result;
+    }
+
+    template<typename TType>
+    [[nodiscard]]
+    std::optional<TType> getNext(std::string const& sequence, size_t* pos) const
+    {
+        size_t const start = *pos;
+        // Stop if we are done
+        if (start == std::string::npos) {
+            return std::nullopt;
+        }
+
+        // Else search for the next part to parse
+        size_t const coma  = sequence.find(',', start);
+        if (coma != std::string::npos) {
+            *pos = coma + 1;
+            return tryParse<TType>(sequence.substr(start, coma - start));
+        }
+        *pos = std::string::npos;
+        return tryParse<TType>(sequence.substr(start));
     }
 
     [[nodiscard]]
@@ -128,7 +157,7 @@ public:
         return m_valid;
     }
 
-    operator bool() const
+    operator bool() const // NOLINT(*-explicit-constructor)
     {
         return m_valid;
     }
@@ -165,7 +194,7 @@ private:
 
     template<typename TType>
     [[nodiscard]]
-    std::enable_if_t<std::is_floating_point_v<TType>, std::optional<TType>> tryParse(std::string const& s)
+    std::enable_if_t<std::is_floating_point_v<TType>, std::optional<TType>> tryParse(std::string const& s) const
     {
         try {
             double const result = std::stod(s);
@@ -181,7 +210,7 @@ private:
 
     template<typename TType>
     [[nodiscard]]
-    std::enable_if_t<std::is_integral_v<TType>, std::optional<TType>> tryParse(std::string const& s)
+    std::enable_if_t<std::is_integral_v<TType>, std::optional<TType>> tryParse(std::string const& s) const
     {
         try {
             long long const result = std::stoll(s);
