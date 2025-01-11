@@ -93,7 +93,7 @@ auto const sequence_1 = loader.tryGetSequenceAsArray<int, 3>("sequence_3");
     };
 
     Vec3 a_vec;
-    if (!loader.tryReadValueIntoArray<3>("sequence_3", &a_vec.x)) {
+    if (!loader.tryReadSequenceIntoArray<3>("sequence_3", &a_vec.x)) {
         std::cout << "Could not read the value" << std::endl;
     } else {
         std::cout << a_vec.x << " " << a_vec.y << " " << a_vec.z << std::endl; // 1 2 3.3
