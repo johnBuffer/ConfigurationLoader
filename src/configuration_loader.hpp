@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <optional>
 #include <regex>
@@ -43,19 +44,10 @@ public:
         }
     }
 
-    bool tryReadValueInto(std::string const& key, uint32_t* destination) const
+    template<typename TType>
+    bool tryReadValueInto(std::string const& key, TType* destination) const
     {
-        std::optional<int32_t> const value = getValueAsInt(key);
-        if (value) {
-            *destination = static_cast<uint32_t>(*value);
-            return true;
-        }
-        return false;
-    }
-
-    bool tryReadValueInto(std::string const& key, int32_t* destination) const
-    {
-        std::optional<int32_t> const value = getValueAsInt(key);
+        std::optional<int32_t> const value = getValueAs<TType>(key);
         if (value) {
             *destination = *value;
             return true;
@@ -63,17 +55,8 @@ public:
         return false;
     }
 
-    bool tryReadValueInto(std::string const& key, float* destination) const
-    {
-        std::optional<float> const value = getValueAsFloat(key);
-        if (value) {
-            *destination = *value;
-            return true;
-        }
-        return false;
-    }
-
-    bool tryReadValueInto(std::string const& key, std::string* destination) const
+    template<>
+    bool tryReadValueInto<std::string>(std::string const& key, std::string* destination) const
     {
         std::optional<std::string> const value = getValueAsString(key);
         if (value) {
@@ -93,48 +76,47 @@ public:
         return it->second;
     }
 
+    template<typename TType>
     [[nodiscard]]
-    std::optional<int32_t> getValueAsInt(std::string const& key) const
+    std::optional<TType> getValueAs(std::string const& key) const
     {
         auto const it = entries.find(key);
         if (it == entries.end()) {
             return std::nullopt;
         }
-        return tryConvertToInt(it->second);
+        return tryParse<TType>(it->second);
     }
 
+    template<typename TType>
     [[nodiscard]]
-    std::optional<float> getValueAsFloat(std::string const& key) const
-    {
-        auto const it = entries.find(key);
-        if (it == entries.end()) {
-            return std::nullopt;
-        }
-        return tryConvertToFloat(it->second);
-    }
-
-    [[nodiscard]]
-    std::optional<std::vector<int32_t>> getValueAsIntVector(std::string const& key) const
+    std::optional<std::vector<TType>> getValueAsVector(std::string const& key) const
     {
         std::optional<std::string> const value = getValueAsString(key);
         if (!value) {
             return std::nullopt;
         }
 
-        std::string const& data = *value;
+        std::string const data = *value + ",";
 
-        std::vector<int32_t> result;
+        std::vector<TType> result;
+
+        auto const tryExtractValue = [this, &data](size_t start, size_t end) -> std::optional<TType> {
+            std::string const part = data.substr(start, end - start);
+            return tryParse<TType>(part);
+        };
 
         size_t start = 0;
         size_t next_coma = data.find(',');
         while (next_coma != std::string::npos) {
-            std::string const part = data.substr(start, next_coma);
-            auto const val = tryConvertToInt(part);
+            auto const val = tryExtractValue(start, next_coma);
             if (val) {
                 result.push_back(*val);
             } else {
                 return std::nullopt;
             }
+
+            start = next_coma + 1;
+            next_coma = data.find(',', start);
         }
 
         return result;
@@ -142,6 +124,11 @@ public:
 
     [[nodiscard]]
     bool isValid() const
+    {
+        return m_valid;
+    }
+
+    operator bool() const
     {
         return m_valid;
     }
@@ -179,20 +166,12 @@ private:
         return std::regex_replace(s, std::regex(" "), "");
     }
 
-    static std::optional<int32_t> tryConvertToInt(std::string const& s)
-    {
-        char* end_ptr;
-        int const result = strtol(s.c_str(), &end_ptr, 10);
-        if (*end_ptr != '\0') {
-            return std::nullopt;
-        }
-        return result;
-    }
-
-    static std::optional<float> tryConvertToFloat(std::string const& s)
+    template<typename TType>
+    [[nodiscard]]
+    std::enable_if_t<std::is_floating_point_v<TType>, std::optional<TType>> tryParse(std::string const& s)
     {
         size_t end_idx;
-        float const result = std::stof(s, &end_idx);
+        double const result = std::stod(s, &end_idx);
         if (s[end_idx] != '\0') {
             return std::nullopt;
         }
@@ -201,30 +180,19 @@ private:
     }
 
     template<typename TType>
-    std::optional<TType> tryConvert(std::string const& s);
-
-    template<>
-    std::optional<float> tryConvert<float>(std::string const& s)
+    [[nodiscard]]
+    std::enable_if_t<std::is_integral_v<TType>, std::optional<TType>> tryParse(std::string const& s)
     {
-        size_t end_idx;
-        float const result = std::stof(s, &end_idx);
-        if (s[end_idx] != '\0') {
-            return std::nullopt;
+        try {
+            long long const result = std::stoll(s);
+            // Ensure the value is within target range
+            if (result >= std::numeric_limits<TType>::min() && result <= std::numeric_limits<TType>::max()) {
+                return static_cast<TType>(result);
+            }
         }
-
-        return result;
-    }
-
-    template<>
-    std::optional<int32_t> tryConvert<int32_t>(std::string const& s)
-    {
-        size_t end_idx;
-        float const result = std::stof(s, &end_idx);
-        if (s[end_idx] != '\0') {
-            return std::nullopt;
-        }
-
-        return result;
+        catch (std::invalid_argument const&) {}
+        // If parse failed or value is not within range
+        return std::nullopt;
     }
 
 private:
