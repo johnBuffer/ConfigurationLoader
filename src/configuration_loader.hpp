@@ -1,3 +1,4 @@
+#pragma once
 #include <array>
 #include <fstream>
 #include <iostream>
@@ -48,7 +49,7 @@ public:
     template<typename TType>
     bool tryReadValueInto(std::string const& key, TType* destination) const
     {
-        std::optional<int32_t> const value = getValueAs<TType>(key);
+        std::optional<TType> const value = getValueAs<TType>(key);
         if (value) {
             *destination = *value;
             return true;
@@ -259,6 +260,7 @@ private:
         try {
             long long const result = std::stoll(s);
             // Ensure the value is within target range
+            /// @TODO Remove warnings for bool comparison
             if (result >= std::numeric_limits<TType>::min() && result <= std::numeric_limits<TType>::max()) {
                 return static_cast<TType>(result);
             }
