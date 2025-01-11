@@ -139,11 +139,9 @@ private:
     {
         size_t const hashtag = s.find('#');
         if (hashtag == std::string::npos) {
-            std::cout << "No comment in \"" << s << "\"" << std::endl;
             return s;
         } else {
             std::string payload = s.substr(0, hashtag);
-            std::cout << "Payload of \"" << s << "\" is \"" << payload << "\"" << std::endl;
             return payload;
         }
     }
@@ -153,7 +151,6 @@ private:
     {
         size_t const equal = s.find('=');
         if (equal == std::string::npos) {
-            std::cout << "No payload in \"" << s << "\"" << std::endl;
             return {"", ""};
         }
 
@@ -170,13 +167,16 @@ private:
     [[nodiscard]]
     std::enable_if_t<std::is_floating_point_v<TType>, std::optional<TType>> tryParse(std::string const& s)
     {
-        size_t end_idx;
-        double const result = std::stod(s, &end_idx);
-        if (s[end_idx] != '\0') {
-            return std::nullopt;
+        try {
+            double const result = std::stod(s);
+            // Ensure the value is within target range
+            if (result >= std::numeric_limits<TType>::min() && result <= std::numeric_limits<TType>::max()) {
+                return static_cast<TType>(result);
+            }
         }
-
-        return result;
+        catch (std::invalid_argument const&) {}
+        // If parse failed or value is not within range
+        return std::nullopt;
     }
 
     template<typename TType>

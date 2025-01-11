@@ -4,10 +4,10 @@
 int main()
 {
     ConfigurationLoader loader("conf.txt");
-    auto const color = loader.getValueAsVector<int32_t>("my_color");
+    auto const color = loader.getValueAsVector<float>("my_color");
 
     if (color) {
-        for (int32_t v : *color) {
+        for (float v : *color) {
             std::cout << v << std::endl;
         }
     } else {
