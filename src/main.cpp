@@ -1,9 +1,9 @@
-#include "configuration_loader.hpp"
+#include "../include/configuration_loader.hpp"
 
 
 int main()
 {
-    ConfigurationLoader loader("conf.txt");
+    cload::ConfigurationLoader loader("conf.txt");
     auto const color = loader.getValueAsArray<float, 3>("my_color");
 
     if (color) {
