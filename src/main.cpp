@@ -1,9 +1,9 @@
-#include "simulation_configuration.hpp"
+#include "configuration_loader.hpp"
 
 
 int main()
 {
-    SimulationConfigurationLoader loader("conf.txt");
+    ConfigurationLoader loader("conf.txt");
 
     return 0;
 }
