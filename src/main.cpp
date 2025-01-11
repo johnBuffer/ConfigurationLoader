@@ -5,41 +5,46 @@ int main()
 {
     cload::ConfigurationLoader loader("conf.txt");
 
+    // Ensure the file has correctly been loaded
+    if (!loader) {
+        std::cout << "The file could not be loaded" << std::endl;
+    }
+
     // Load a value
-    auto const int_1 = loader.getValueAs<int32_t>("value_int_1");
+    auto const int_1 = loader.tryGetValueAs<int32_t>("value_int_1");
     if (int_1) {
         std::cout << *int_1 << std::endl; // 1
     }
 
-    auto const int_2 = loader.getValueAs<int32_t>("value_int_2");
+    auto const int_2 = loader.tryGetValueAs<int32_t>("value_int_2");
     if (int_2) {
         std::cout << *int_2 << std::endl; // -3
     }
 
-    auto const uint_1 = loader.getValueAs<uint32_t>("value_int_2");
+    auto const uint_1 = loader.tryGetValueAs<uint32_t>("value_int_2");
     if (uint_1) {
         std::cout << *uint_1 << std::endl;
     } else {
         std::cout << "parse error" << std::endl; // Parse error, -3 is not supported by uint32_t
     }
 
-    auto const float_1 = loader.getValueAs<float>("value_float_3");
+    auto const float_1 = loader.tryGetValueAs<float>("value_float_3");
     if (float_1) {
         std::cout << *float_1 << std::endl; // 1
     }
 
     // Load sequence as an array of int
-    auto const sequence_1 = loader.getValueAsArray<int, 3>("sequence_3");
+auto const sequence_1 = loader.tryGetSequenceAsArray<int, 3>("sequence_3");
     if (sequence_1) {
         std::cout << sequence_1->size() << std::endl; // 3
     }
 
-    auto const sequence_2 = loader.getValueAsArray<int, 3>("sequence_1");
+    auto const sequence_2 = loader.tryGetSequenceAsArray<int, 3>("sequence_1");
     if (sequence_2) {
         std::cout << sequence_2->size() << std::endl; // 3, only the first 3 elements of the sequence are loaded
     }
 
-    auto const sequence_3 = loader.getValueAsVector<int>("sequence_1");
+    auto const sequence_3 = loader.tryGetSequence<int>("sequence_1");
     if (sequence_3) {
         std::cout << sequence_3->size() << std::endl; // 4, all elements are loaded
     }

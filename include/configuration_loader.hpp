@@ -68,7 +68,7 @@ public:
     template<typename TType>
     bool tryReadValueInto(std::string const& key, TType* destination) const
     {
-        std::optional<TType> const value = getValueAs<TType>(key);
+        std::optional<TType> const value = tryGetValueAs<TType>(key);
         if (value) {
             *destination = *value;
             return true;
@@ -85,7 +85,7 @@ public:
     template<>
     bool tryReadValueInto<std::string>(std::string const& key, std::string* destination) const
     {
-        std::optional<std::string> const value = getValueAsString(key);
+        std::optional<std::string> const value = tryGetValueAsString(key);
         if (value) {
             *destination = *value;
             return true;
@@ -104,7 +104,7 @@ public:
     template<typename TType, size_t COUNT>
     bool tryReadValueIntoArray(std::string const& key, TType (&array)[COUNT]) const
     {
-        std::optional<std::string> const value = getValueAsString(key);
+        std::optional<std::string> const value = tryGetValueAsString(key);
         if (!value) {
             return false;
         }
@@ -134,7 +134,7 @@ public:
     template<size_t COUNT, typename TType>
     bool tryReadValueIntoArray(std::string const& key, TType array[]) const
     {
-        std::optional<std::string> const value = getValueAsString(key);
+        std::optional<std::string> const value = tryGetValueAsString(key);
         if (!value) {
             return false;
         }
@@ -161,9 +161,9 @@ public:
      */
     template<typename TType>
     [[nodiscard]]
-    std::optional<std::vector<TType>> getValueAsVector(std::string const& key) const
+    std::optional<std::vector<TType>> tryGetSequence(std::string const& key) const
     {
-        std::optional<std::string> const value = getValueAsString(key);
+        std::optional<std::string> const value = tryGetValueAsString(key);
         if (!value) {
             return std::nullopt;
         }
@@ -187,9 +187,9 @@ public:
      */
     template<typename TType, size_t COUNT>
     [[nodiscard]]
-    std::optional<std::array<TType, COUNT>> getValueAsArray(std::string const& key) const
+    std::optional<std::array<TType, COUNT>> tryGetSequenceAsArray(std::string const& key) const
     {
-        std::optional<std::string> const value = getValueAsString(key);
+        std::optional<std::string> const value = tryGetValueAsString(key);
         if (!value) {
             return std::nullopt;
         }
@@ -216,7 +216,7 @@ public:
      * @return An optional containing the result if the key was found
      */
     [[nodiscard]]
-    std::optional<std::string> getValueAsString(std::string const& key) const
+    std::optional<std::string> tryGetValueAsString(std::string const& key) const
     {
         auto const it = entries.find(key);
         if (it == entries.end()) {
@@ -233,7 +233,7 @@ public:
      */
     template<typename TType>
     [[nodiscard]]
-    std::optional<TType> getValueAs(std::string const& key) const
+    std::optional<TType> tryGetValueAs(std::string const& key) const
     {
         auto const it = entries.find(key);
         if (it == entries.end()) {
