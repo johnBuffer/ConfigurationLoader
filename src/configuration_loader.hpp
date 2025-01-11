@@ -67,6 +67,50 @@ public:
         return false;
     }
 
+    template<typename TType, size_t COUNT>
+    bool tryReadValueIntoArray(std::string const& key, TType (&array)[COUNT]) const
+    {
+        std::optional<std::string> const value = getValueAsString(key);
+        if (!value) {
+            return false;
+        }
+
+        std::string const& data = *value;
+        size_t start = 0;
+        for (size_t i{0}; i < COUNT; ++i) {
+            auto const val = getNext<TType>(data, &start);
+            if (val) {
+                array[i] = *val;
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    template<size_t COUNT, typename TType>
+    bool tryReadValueIntoArray(std::string const& key, TType array[]) const
+    {
+        std::optional<std::string> const value = getValueAsString(key);
+        if (!value) {
+            return false;
+        }
+
+        std::string const& data = *value;
+        size_t start = 0;
+        for (size_t i{0}; i < COUNT; ++i) {
+            auto const val = getNext<TType>(data, &start);
+            if (val) {
+                array[i] = *val;
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     [[nodiscard]]
     std::optional<std::string> getValueAsString(std::string const& key) const
     {

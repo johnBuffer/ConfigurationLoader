@@ -14,5 +14,9 @@ int main()
         std::cout << "Error" << std::endl;
     }
 
+    int array[3];
+    loader.tryReadValueIntoArray("my_color", array);
+    loader.tryReadValueIntoArray<3>("my_color", array);
+
     return 0;
 }
