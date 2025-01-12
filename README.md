@@ -1,6 +1,6 @@
 # Configuration Loader
 
-Very simple configuration file parser
+Very simple configuration file parser written in C++.
 
 # Installation
 
