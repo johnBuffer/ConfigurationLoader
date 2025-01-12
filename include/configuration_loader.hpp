@@ -102,7 +102,7 @@ public:
      * @return True if the parse was successful for all the elements of the array
      */
     template<typename TType, size_t COUNT>
-    bool tryReadValueIntoArray(std::string const& key, TType (&array)[COUNT]) const
+    bool tryReadSequenceIntoArray(std::string const& key, TType (&array)[COUNT]) const
     {
         std::optional<std::string> const value = tryGetValueAsString(key);
         if (!value) {
